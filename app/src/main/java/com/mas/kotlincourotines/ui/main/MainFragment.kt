@@ -18,6 +18,7 @@ import com.mas.kotlincourotines.databinding.FragmentMainBinding
 import com.mas.kotlincourotines.network.ApiModule
 import com.mas.kotlincourotines.ui.adapter.ShopContentAdapter
 import com.mas.kotlincourotines.ui.detail.ShopFragment
+import com.mas.kotlincourotines.ui.setDebouncedClickListener
 import com.mas.kotlincourotines.ui.viewmodels.MainViewModel
 import com.mas.kotlincourotines.ui.viewmodels.MainViewModelFactory
 
@@ -50,6 +51,19 @@ class MainFragment : Fragment(), ShopContentAdapter.OnItemClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initObservers()
+        initRecyclerView()
+        binding.btnRefresh.setDebouncedClickListener {
+            fetchContent()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        fetchContent()
+    }
+
+    private fun initObservers() {
         mainViewModel.data.observe(viewLifecycleOwner) { newsResult ->
             when(newsResult) {
                 is NewsResult.Success ->{
@@ -66,6 +80,7 @@ class MainFragment : Fragment(), ShopContentAdapter.OnItemClickListener {
                     shopContentList.clear()
                     shopContentList.addAll(shopResult.data.contents)
                     shopContentAdapter?.notifyDataSetChanged()
+                    binding.recyclerview.visibility = View.VISIBLE
                 }
                 is ShopResult.Error -> {
                     showError(shopResult.exception.message)
@@ -76,13 +91,13 @@ class MainFragment : Fragment(), ShopContentAdapter.OnItemClickListener {
         mainViewModel.loading.observe(viewLifecycleOwner) { isLoading->
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
-
+    }
+    private fun fetchContent() {
+        binding.recyclerview.visibility = View.GONE
         mainViewModel.loadData()
         mainViewModel.fetchShopContents()
 
-        initRecyclerView()
     }
-
     private fun initRecyclerView() {
         shopContentAdapter = ShopContentAdapter(shopContentList, this).also { adapter ->
             binding.recyclerview.apply {
