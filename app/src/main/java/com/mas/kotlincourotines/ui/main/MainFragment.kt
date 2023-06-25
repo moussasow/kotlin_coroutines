@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.mas.kotlincourotines.R
 import com.mas.kotlincourotines.data.ApiRepository
 import com.mas.kotlincourotines.data.model.ShopContent
 import com.mas.kotlincourotines.data.result.NewsResult
@@ -16,6 +17,7 @@ import com.mas.kotlincourotines.data.result.ShopResult
 import com.mas.kotlincourotines.databinding.FragmentMainBinding
 import com.mas.kotlincourotines.network.ApiModule
 import com.mas.kotlincourotines.ui.adapter.ShopContentAdapter
+import com.mas.kotlincourotines.ui.detail.ShopFragment
 import com.mas.kotlincourotines.ui.viewmodels.MainViewModel
 import com.mas.kotlincourotines.ui.viewmodels.MainViewModelFactory
 
@@ -61,6 +63,7 @@ class MainFragment : Fragment(), ShopContentAdapter.OnItemClickListener {
         mainViewModel.shopContents.observe(viewLifecycleOwner) { shopResult ->
             when(shopResult) {
                 is ShopResult.Success -> {
+                    shopContentList.clear()
                     shopContentList.addAll(shopResult.data.contents)
                     shopContentAdapter?.notifyDataSetChanged()
                 }
@@ -99,6 +102,10 @@ class MainFragment : Fragment(), ShopContentAdapter.OnItemClickListener {
     }
 
     override fun onItemClick(shopContent: ShopContent) {
-        Toast.makeText(requireContext(), shopContent.title, Toast.LENGTH_SHORT).show()
+        val fragment = ShopFragment.newInstance(shopContent.image.url, shopContent.title)
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.container, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 }
